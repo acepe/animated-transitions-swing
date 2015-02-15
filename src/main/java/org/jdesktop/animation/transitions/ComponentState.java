@@ -21,6 +21,7 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.Transparency;
 
 import javax.swing.JComponent;
@@ -35,10 +36,9 @@ public class ComponentState {
 
     /** The component. */
     private JComponent component;
-    /** The x location of the component. */
-    private int x;
-    /** The y location of the component. */
-    private int y;
+    /** The location of the component. */
+    private final Point location;
+
     /** The width of the component. */
     private int width;
     /** The height of the component. */
@@ -51,14 +51,6 @@ public class ComponentState {
     private Image componentSnapshot;
 
     /**
-     * Pack-private version of the constructor. This only exists as a workaround for allowing ScreenTransition to
-     * eagerly load and initialize its helper classes at construction time, rather than doing everything during the
-     * first transition.
-     */
-    ComponentState() {
-    }
-
-    /**
      * The constructor takes a component and derives the state information needed (location, size, and image snapshot)
      *
      * @param component
@@ -66,8 +58,7 @@ public class ComponentState {
      */
     public ComponentState(JComponent component) {
         this.component = component;
-        this.x = component.getX();
-        this.y = component.getY();
+        location = component.getLocation();
         this.width = component.getWidth();
         this.height = component.getHeight();
         componentSnapshot = createSnapshot(component);
@@ -99,11 +90,11 @@ public class ComponentState {
     }
 
     public int getX() {
-        return x;
+        return location.x;
     }
 
     public int getY() {
-        return y;
+        return location.y;
     }
 
     public int getWidth() {
@@ -191,8 +182,7 @@ public class ComponentState {
         }
         if (obj instanceof ComponentState) {
             ComponentState other = (ComponentState) obj;
-            if (this.x == other.x
-                && this.y == other.y
+            if (this.location == other.location
                 && this.width == other.width
                 && this.height == other.height
                 && this.component == other.component) {
@@ -208,8 +198,8 @@ public class ComponentState {
     @Override
     public int hashCode() {
         int result = 17;
-        result = 37 * result + x;
-        result = 37 * result + y;
+        result = 37 * result + location.x;
+        result = 37 * result + location.y;
         result = 37 * result + width;
         result = 37 * result + height;
         result = 37 * result + component.hashCode();
@@ -221,9 +211,9 @@ public class ComponentState {
      */
     public String toString() {
         return "ComponentState: x, y, w, h, component = "
-               + x
+               + location.x
                + ", "
-               + y
+               + location.y
                + ", "
                + width
                + ", "

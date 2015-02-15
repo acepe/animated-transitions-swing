@@ -16,7 +16,6 @@
 
 package org.jdesktop.animation.transitions;
 
-import java.awt.Component;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.event.ComponentAdapter;
@@ -89,12 +88,6 @@ public class ScreenTransition {
     private TransitionTarget transitionTarget;
 
     /**
-     * If the application has already set their own custom glass pane, we save that component here before using the
-     * glass pane for our own purposes. We then restore the original glass pane when the animation has completed.
-     */
-    private Component savedGlassPane;
-
-    /**
      * Animation engine for the transition.
      */
     private Animator animator = null;
@@ -103,30 +96,19 @@ public class ScreenTransition {
      * Constructor for ScreenTransition. The application must supply the JComponent that they wish to transition and the
      * TransitionTarget which supplies the callback methods called during the transition process.
      * 
-     * @param transitionComponent
+     * @param containerLayer
      *            JComponent in which the application wishes to run the transition.
      * @param transitionTarget
      *            Implementation of <code>TransitionTarget</code> interface which will be called during transition
      *            process.
      */
-    private ScreenTransition(JComponent transitionComponent, TransitionTarget transitionTarget) {
-        this.containerLayer = transitionComponent;
+    private ScreenTransition(JComponent containerLayer, TransitionTarget transitionTarget) {
+        this.containerLayer = containerLayer;
         this.transitionTarget = transitionTarget;
 
-        this.animationManager = new AnimationManager(transitionComponent);
-        this.animationLayer = new AnimationLayer(this);
-        this.animationLayer.setVisible(false);
-        // Hack: pre-warm PropertySetter, AnimationState, and ComponentState
-        // just to get some static initializers
-        // out of the way that will needed before the first
-        // transition can start
-        // TODO -- what is this doing? only one point is illegal for a
-        // property setter.
-        // PropertySetter propertySetter = new PropertySetter(
-        // transitionComponent, "location",
-        // new Point(0, 0));
-        AnimationState animState = new AnimationState();
-        ComponentState compState = new ComponentState();
+        animationManager = new AnimationManager(containerLayer);
+        animationLayer = new AnimationLayer(this);
+        animationLayer.setVisible(false);
         containerLayer.addComponentListener(new ContainerSizeListener());
         createTransitionImages();
     }
@@ -181,6 +163,7 @@ public class ScreenTransition {
             && (transitionImage == null || transitionImage.getWidth() != cw || transitionImage.getHeight() != ch)) {
             // Recreate transition image and background for new dimensions
             transitionImage = (BufferedImage) containerLayer.createImage(cw, ch);
+            System.out.println("creating new Transition-Image: " + cw + ", " + ch);
             animationManager.recreateImage();
         }
     }
@@ -247,7 +230,7 @@ public class ScreenTransition {
      */
     public void start() {
         if (animator.isRunning()) {
-            animator.stop();
+            animator.stopAndAwait();
         }
         animator.start();
     }
@@ -289,7 +272,6 @@ public class ScreenTransition {
             // the transition).
 
             containerLayer.getRootPane().getLayeredPane().add(animationLayer, new Integer(301));
-            animationLayer.setBounds(containerLayer.getRootPane().getLayeredPane().getBounds());
             animationLayer.setVisible(true);
 
             // Now that the contentPane is invisible to the user, have the

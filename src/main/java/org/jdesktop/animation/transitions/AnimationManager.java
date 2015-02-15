@@ -69,10 +69,13 @@ class AnimationManager {
      * null or of a different size than the current container
      */
     void recreateImage() {
-        int cw = container.getWidth();
-        int ch = container.getHeight();
+        Rectangle visibleRect = container.getBounds();
+
+        int cw = visibleRect.width;
+        int ch = visibleRect.height;
         if ((cw > 0 && ch > 0)
             && (transitionImageBG == null || cw != transitionImageBG.getWidth() || ch != transitionImageBG.getHeight())) {
+            System.out.println("creating new TransitionBG: " + cw + ", " + ch);
             transitionImageBG = (BufferedImage) container.createImage(cw, ch);
         }
     }
@@ -123,7 +126,7 @@ class AnimationManager {
                     bounds = bounds.union(boundsEnd);
                 }
             }
-            Rectangle componentBounds = container.getBounds();
+            Rectangle componentBounds = container.getVisibleRect();// getBounds();
             if (bounds.intersects(componentBounds)) {
                 continue;
             } else {
