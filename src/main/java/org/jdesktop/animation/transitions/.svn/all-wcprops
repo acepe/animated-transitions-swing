@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/animatedtransitions~svn/!svn/ver/20/trunk/src/org/jdesktop/animation/transitions
+END
+AnimationLayer.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/animatedtransitions~svn/!svn/ver/9/trunk/src/org/jdesktop/animation/transitions/AnimationLayer.java
+END
+package.html
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/animatedtransitions~svn/!svn/ver/10/trunk/src/org/jdesktop/animation/transitions/package.html
+END
+AnimationState.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/animatedtransitions~svn/!svn/ver/9/trunk/src/org/jdesktop/animation/transitions/AnimationState.java
+END
+ImageViewer.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/animatedtransitions~svn/!svn/ver/9/trunk/src/org/jdesktop/animation/transitions/ImageViewer.java
+END
+EffectsManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/animatedtransitions~svn/!svn/ver/19/trunk/src/org/jdesktop/animation/transitions/EffectsManager.java
+END
+AnimationManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/animatedtransitions~svn/!svn/ver/9/trunk/src/org/jdesktop/animation/transitions/AnimationManager.java
+END
+TransitionTarget.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/animatedtransitions~svn/!svn/ver/9/trunk/src/org/jdesktop/animation/transitions/TransitionTarget.java
+END
+ComponentState.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/animatedtransitions~svn/!svn/ver/20/trunk/src/org/jdesktop/animation/transitions/ComponentState.java
+END
+ScreenTransition.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/animatedtransitions~svn/!svn/ver/9/trunk/src/org/jdesktop/animation/transitions/ScreenTransition.java
+END
+Effect.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/animatedtransitions~svn/!svn/ver/10/trunk/src/org/jdesktop/animation/transitions/Effect.java
+END
