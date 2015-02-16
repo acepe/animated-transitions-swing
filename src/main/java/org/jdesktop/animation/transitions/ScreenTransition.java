@@ -40,6 +40,7 @@ import org.jdesktop.core.animation.timing.TimingTargetAdapter;
  * @author Chet Haase
  */
 public class ScreenTransition {
+    private static final Integer DEFAULT_LAYER_ID = 301;
 
     /*
      * Implementation detail: The key to making ScreenTransition work correctly is having two different views or layers
@@ -51,10 +52,10 @@ public class ScreenTransition {
      * components around during these layout phases cannot happen onscreen (the net effect would be that the user would
      * see the end result before the transition), so we do the layout on an invisible container instead. Then the
      * animation happens to transition between the two states, in his separate animationLayer. Further detail: the
-     * "animationLayer" is set to be the glass pane of the application frame. Glass pane already has the functionality
-     * we need (specifically, it overlays the area that we need to render during the transition); the only trick is that
-     * we must position the rendering correctly since the glass pane typically covers the entire application frame, but
-     * in this case the transition container may only occupy a portion of the frame.
+     * "animationLayer" is added to be the layered pane of the application frame. The layered pane already has the
+     * functionality we need (specifically, it overlays the area that we need to render during the transition); the only
+     * trick is that we must position the rendering correctly since the layered pane typically covers the entire
+     * application frame, but in this case the transition container may only occupy a portion of the frame.
      */
 
     /**
@@ -63,7 +64,7 @@ public class ScreenTransition {
     private AnimationManager animationManager;
 
     /**
-     * The component where the transition animation occurs. This component (which is set to be the glass pane) is
+     * The component where the transition animation occurs. This component (which is set to be the layered pane) is
      * visible during the transition, but is otherwise invisible.
      */
     private AnimationLayer animationLayer;
@@ -77,7 +78,7 @@ public class ScreenTransition {
 
     /**
      * Image used to store the current state of the transition animation. This image will be rendered to during
-     * timingEvent() and then copied into the glass pane during the repaint cycle.
+     * timingEvent() and then copied into the layered pane during the repaint cycle.
      */
     private BufferedImage transitionImage;
 
@@ -163,7 +164,6 @@ public class ScreenTransition {
             && (transitionImage == null || transitionImage.getWidth() != cw || transitionImage.getHeight() != ch)) {
             // Recreate transition image and background for new dimensions
             transitionImage = (BufferedImage) containerLayer.createImage(cw, ch);
-            System.out.println("creating new Transition-Image: " + cw + ", " + ch);
             animationManager.recreateImage();
         }
     }
@@ -215,7 +215,7 @@ public class ScreenTransition {
 
     /**
      * Returns image used during timingEvent rendering. This is called by AnimationLayer to get the contents for the
-     * glass pane
+     * layered pane
      */
     Image getTransitionImage() {
         return transitionImage;
@@ -230,7 +230,8 @@ public class ScreenTransition {
      */
     public void start() {
         if (animator.isRunning()) {
-            animator.stopAndAwait();
+            animator.restart();
+            return;
         }
         animator.start();
     }
@@ -252,6 +253,7 @@ public class ScreenTransition {
          * on the changes taking place in the components between the two screens and initializes those effects
          * appropriately.
          */
+        @Override
         public void begin(Animator source) {
             // Make sure that our background images exist and is the right size
             createTransitionImages();
@@ -261,7 +263,7 @@ public class ScreenTransition {
             animationManager.setupStart();
 
             // This records data in animationLayer used to copy the transition
-            // contents correctly into the glass pane
+            // contents correctly into the layered pane
             animationLayer.setupBackground(containerLayer);
 
             // Make the animationLayer visible and the contentPane invisible. This
@@ -271,7 +273,7 @@ public class ScreenTransition {
             // state before the transition begins, the transitioning state during
             // the transition).
 
-            containerLayer.getRootPane().getLayeredPane().add(animationLayer, new Integer(301));
+            containerLayer.getRootPane().getLayeredPane().add(animationLayer, DEFAULT_LAYER_ID);
             animationLayer.setVisible(true);
 
             // Now that the contentPane is invisible to the user, have the
@@ -295,7 +297,7 @@ public class ScreenTransition {
             // the container invisible for the duration of the transition
             containerLayer.setVisible(false);
 
-            // workaround: need glass pane to reflect initial contents when we
+            // workaround: need layered pane to reflect initial contents when we
             // exit this function to avoid flash of blank container
             timingEvent(source, 0);
         }
@@ -304,6 +306,7 @@ public class ScreenTransition {
          * Implementation of the <code>TimingTarget</code> interface. This method is called repeatedly during the
          * transition animation. We force a repaint, which causes the current transition state to be rendered.
          */
+        @Override
         public void timingEvent(Animator source, double elapsedFraction) {
             Graphics2D gImg = (Graphics2D) transitionImage.getGraphics();
 
@@ -312,7 +315,7 @@ public class ScreenTransition {
 
             gImg.dispose();
 
-            // Force transitionImage to be copied to the glass pane
+            // Force transitionImage to be copied to the layered pane
             animationLayer.repaint();
         }
 
@@ -320,11 +323,9 @@ public class ScreenTransition {
          * Override of <code>TimingTarget.end()</code>; switch the visibility of the containerLayer and animationLayer
          * and force repaint.
          */
+        @Override
         public void end(Animator source) {
-            // containerLayer.getRootPane().setGlassPane(savedGlassPane);
-            // containerLayer.getRootPane().getGlassPane().setVisible(false);
             containerLayer.getRootPane().getLayeredPane().remove(animationLayer);
-            animationLayer.setVisible(false);
             containerLayer.setVisible(true);
             containerLayer.repaint();
             // Reset the AnimationManager (this releases all previous transition

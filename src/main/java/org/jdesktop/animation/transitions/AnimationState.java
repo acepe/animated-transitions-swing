@@ -58,18 +58,10 @@ class AnimationState {
     private Effect effect;
 
     /**
-     * Default constructor. This object is typically constructed with a JComponent or a ComponentState object, not
-     * through the default constructor. This constructor is currently used simply to force some eager initialization of
-     * the system when ScreenTransition is first instantiated.
-     */
-    AnimationState() {
-    }
-
-    /**
      * Creates the AnimationState with the given start/end ComponentState
      */
     AnimationState(ComponentState state, boolean isStart) {
-        this.component = state.getComponent();
+        component = state.getComponent();
         if (isStart) {
             start = state;
         } else {
@@ -108,6 +100,14 @@ class AnimationState {
 
     Component getComponent() {
         return component;
+    }
+
+    boolean hasStart() {
+        return start != null;
+    }
+
+    boolean hasEnd() {
+        return end != null;
     }
 
     /**
@@ -203,4 +203,5 @@ class AnimationState {
             g2d.dispose();
         }
     }
+
 }

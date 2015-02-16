@@ -16,7 +16,6 @@
 
 package org.jdesktop.animation.transitions;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
@@ -40,7 +39,8 @@ class AnimationLayer extends JComponent {
     // We call into ScreenTransition to get the current transition image
     // which holds each frame's rendering during the transition
     private final ScreenTransition screenTransition;
-    private Point componentLocation;
+
+    private Point componentLocationInLayeredPane;
     private Rectangle visibleRectInLayeredPane;
 
     /**
@@ -48,8 +48,8 @@ class AnimationLayer extends JComponent {
      * paintComponent() time
      */
     public AnimationLayer(ScreenTransition screenTransition) {
-        setOpaque(false);
         this.screenTransition = screenTransition;
+        setOpaque(false);
     }
 
     /**
@@ -61,13 +61,11 @@ class AnimationLayer extends JComponent {
 
         Rectangle visibleRect = targetComponent.getVisibleRect();
         visibleRectInLayeredPane = SwingUtilities.convertRectangle(targetComponent, visibleRect, layeredPane);
-
-        componentLocation = convertLocation(targetComponent, layeredPane);
-        System.out.println("Comp-loc: " + componentLocation);
+        componentLocationInLayeredPane = convertLocation(targetComponent, layeredPane);
     }
 
     private Point convertLocation(JComponent component, JComponent target) {
-        // Walk the parent hierarchy to get the topmost JComponent parent
+        // Walk the parent hierarchy up to target
         // Calculate the relative XY location of the original component as we go
         int x = 0, y = 0;
         JComponent topmost = component;
@@ -93,34 +91,7 @@ class AnimationLayer extends JComponent {
                    visibleRectInLayeredPane.height);
 
         Image transitionImage = screenTransition.getTransitionImage();
-
-        g.translate(componentLocation.x, componentLocation.y);
+        g.translate(componentLocationInLayeredPane.x, componentLocationInLayeredPane.y);
         g.drawImage(transitionImage, 0, 0, null);
-        // new ImageViewer(screenTransition.getTransitionImage()).setVisible(true);
-
-        g.setColor(Color.cyan);
-        g.drawRect(0, 0, transitionImage.getWidth(null) - 1, transitionImage.getHeight(null) - 1);
-        g.drawLine(0, 0, transitionImage.getWidth(null), transitionImage.getHeight(null));
-        g.drawLine(0, transitionImage.getHeight(null), transitionImage.getWidth(null), 0);
-        g.translate(-componentLocation.x, -componentLocation.y);
-
-        g.setColor(Color.black);
-        g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
-        g.drawLine(0, 0, getWidth(), getHeight());
-        g.drawLine(0, getHeight(), getWidth(), 0);
-
-        g.setColor(Color.RED);
-        g.drawRect(visibleRectInLayeredPane.x,
-                   visibleRectInLayeredPane.y,
-                   (int) visibleRectInLayeredPane.getWidth() - 1,
-                   (int) visibleRectInLayeredPane.getHeight() - 1);
-        g.drawLine(visibleRectInLayeredPane.x,
-                   visibleRectInLayeredPane.y,
-                   (int) visibleRectInLayeredPane.getMaxX(),
-                   (int) visibleRectInLayeredPane.getMaxY());
-        g.drawLine(visibleRectInLayeredPane.x,
-                   (int) visibleRectInLayeredPane.getMaxY(),
-                   (int) visibleRectInLayeredPane.getMaxX(),
-                   visibleRectInLayeredPane.y);
     }
 }

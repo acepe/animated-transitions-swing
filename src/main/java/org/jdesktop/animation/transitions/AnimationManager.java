@@ -34,9 +34,9 @@ import org.jdesktop.core.animation.timing.Animator;
  * start and end screens of the transitioning component, there is a call to <code>addStart</code> or <code>addEnd</code>
  * . Information for the start and end states are stored in individual <code>AnimationState</code> objects on a
  * per-component basis.
- *
- * During the transition, animation timing events trigger calls to {@link #paint(Graphics) paint()}, which asks each of
- * the <code>
+ * <p/>
+ * During the transition, animation timing events trigger calls to {@link #paint(Graphics g)}, which asks each of the
+ * <code>
  * AnimationState</code> structures to render themselves in their current, animating state.
  *
  * @author Chet Haase
@@ -44,10 +44,10 @@ import org.jdesktop.core.animation.timing.Animator;
 class AnimationManager {
 
     // The set of start/end states for each component in the transition
-    private Map<JComponent, AnimationState> componentAnimationStates = new HashMap<JComponent, AnimationState>();
+    private Map<JComponent, AnimationState> componentAnimationStates = new HashMap<>();
 
     // The set of components that change between their start and end states
-    private ArrayList<JComponent> changingComponents = new ArrayList<JComponent>();
+    private ArrayList<JComponent> changingComponents = new ArrayList<>();
 
     // The container in which the transition will occur
     JComponent container = null;
@@ -69,13 +69,10 @@ class AnimationManager {
      * null or of a different size than the current container
      */
     void recreateImage() {
-        Rectangle visibleRect = container.getBounds();
-
-        int cw = visibleRect.width;
-        int ch = visibleRect.height;
+        int cw = container.getWidth();
+        int ch = container.getHeight();
         if ((cw > 0 && ch > 0)
             && (transitionImageBG == null || cw != transitionImageBG.getWidth() || ch != transitionImageBG.getHeight())) {
-            System.out.println("creating new TransitionBG: " + cw + ", " + ch);
             transitionImageBG = (BufferedImage) container.createImage(cw, ch);
         }
     }
@@ -110,15 +107,15 @@ class AnimationManager {
 
         // First, make sure that we don't run animations for components
         // that aren't even visible
-        List<Component> componentsToRemove = new ArrayList<Component>();
+        List<Component> componentsToRemove = new ArrayList<>();
         for (AnimationState state : componentAnimationStates.values()) {
-            ComponentState start = state.getStart();
-            ComponentState end = state.getEnd();
             Rectangle bounds = null;
-            if (start != null) {
+            if (state.hasStart()) {
+                ComponentState start = state.getStart();
                 bounds = new Rectangle(start.getX(), start.getY(), start.getWidth(), start.getHeight());
             }
-            if (end != null) {
+            if (state.hasEnd()) {
+                ComponentState end = state.getEnd();
                 Rectangle boundsEnd = new Rectangle(end.getX(), end.getY(), end.getWidth(), end.getHeight());
                 if (bounds == null) {
                     bounds = boundsEnd;
@@ -126,10 +123,8 @@ class AnimationManager {
                     bounds = bounds.union(boundsEnd);
                 }
             }
-            Rectangle componentBounds = container.getVisibleRect();// getBounds();
-            if (bounds.intersects(componentBounds)) {
-                continue;
-            } else {
+            Rectangle visibleComponentBounds = container.getVisibleRect();
+            if (bounds != null && !bounds.intersects(visibleComponentBounds)) {
                 componentsToRemove.add(state.getComponent());
             }
         }
@@ -203,7 +198,7 @@ class AnimationManager {
 
     /**
      * Add a start state for the given component
-     * 
+     *
      * @param component
      *            The individual component to be animated
      */
@@ -221,7 +216,7 @@ class AnimationManager {
 
     /**
      * Add an end state for the given component
-     * 
+     *
      * @param component
      *            The individual component to be animated
      */
@@ -240,7 +235,7 @@ class AnimationManager {
     /**
      * This method is called during the transition animation. Iterate through the various <code>AnimationState</code>
      * objects asking each one to paint itself into the <code>Graphics</code>.
-     * 
+     *
      * @param g
      *            The <code>Graphics</code> object that the animating objects need to render themselves into.
      */

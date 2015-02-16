@@ -36,6 +36,7 @@ public class ComponentState {
 
     /** The component. */
     private JComponent component;
+
     /** The location of the component. */
     private final Point location;
 
@@ -59,8 +60,8 @@ public class ComponentState {
     public ComponentState(JComponent component) {
         this.component = component;
         location = component.getLocation();
-        this.width = component.getWidth();
-        this.height = component.getHeight();
+        width = component.getWidth();
+        height = component.getHeight();
         componentSnapshot = createSnapshot(component);
     }
 
