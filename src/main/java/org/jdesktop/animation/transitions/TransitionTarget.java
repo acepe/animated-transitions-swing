@@ -1,3 +1,4 @@
+//@formatter:off
 /*
  * Copyright 2007 Sun Microsystems, Inc.  All Rights Reserved.
  *
@@ -28,32 +29,28 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+//@formatter:on
 
 package org.jdesktop.animation.transitions;
 
 /**
- * This interface is implemented by the "target" of ScreenTransition.  This
- * target will be called by ScreenTransition during the transition setup
- * process, so that the application can modify the application 
- * state appropriately.
+ * This interface is implemented by the "target" of ScreenTransition. This target will be called by ScreenTransition
+ * during the transition setup process, so that the application can modify the application state appropriately.
  * 
- * @see ScreenTransition#ScreenTransition(JComponent, TransitionTarget, int)
- * @see ScreenTransition#ScreenTransition(JComponent, TransitionTarget, Animator)
+ * @see ScreenTransition#ScreenTransition(javax.swing.JComponent, TransitionTarget,
+ *      org.jdesktop.animation.transitions.EffectsManager, org.jdesktop.core.animation.timing.Animator)
  * 
  * @author Chet Haase
  */
 public interface TransitionTarget {
-    
+
     /**
      * This method is called during the {@link ScreenTransition#start()} method.
      * <p>
-     * Implementors will change the UI in their transition container in
-     * this method. This tells ScreenTransition the end-state of the components
-     * for the upcoming transition.  After this method is complete, 
-     * <code>ScreenTransition</code> has the information it needs to run 
-     * the transition and the animation will begin.
+     * Implementors will change the UI in their transition container in this method. This tells ScreenTransition the
+     * end-state of the components for the upcoming transition. After this method is complete,
+     * <code>ScreenTransition</code> has the information it needs to run the transition and the animation will begin.
      */
     public void setupNextScreen();
-    
-}
 
+}

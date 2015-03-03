@@ -1,18 +1,35 @@
+//@formatter:off
 /*
- * Copyright 2007 Sun Microsystems, Inc. All Rights Reserved. Redistribution and use in source and binary forms, with or
- * without modification, are permitted provided that the following conditions are met: - Redistributions of source code
- * must retain the above copyright notice, this list of conditions and the following disclaimer. - Redistributions in
- * binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution. - Neither the name of Sun Microsystems nor the
- * names of its contributors may be used to endorse or promote products derived from this software without specific
- * prior written permission. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Copyright 2007 Sun Microsystems, Inc.  All Rights Reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   - Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *   - Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *
+ *   - Neither the name of Sun Microsystems nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+//@formatter:on
 
 package org.jdesktop.animation.transitions;
 
@@ -22,6 +39,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JComponent;
 
@@ -41,6 +59,20 @@ import org.jdesktop.core.animation.timing.TimingTargetAdapter;
  */
 public class ScreenTransition {
     private static final Integer DEFAULT_LAYER_ID = 301;
+
+    /**
+     * Sets the passed effects manager as the default used for the construction of transitions. If no effects manager is
+     * explicitly set, a default is used.
+     * 
+     * Passing {@code null} to this method resets the effect manager to the default.
+     */
+    public static void setDefaultEffectsManager(EffectsManager effectsManager) {
+        Builder.setDefaultEffectsManager(effectsManager);
+    }
+
+    public static EffectsManager getDefaultEffectsManager() {
+        return Builder.getDefaultEffectsManager();
+    }
 
     /*
      * Implementation detail: The key to making ScreenTransition work correctly is having two different views or layers
@@ -93,65 +125,113 @@ public class ScreenTransition {
      */
     private Animator animator = null;
 
-    /**
-     * Constructor for ScreenTransition. The application must supply the JComponent that they wish to transition and the
-     * TransitionTarget which supplies the callback methods called during the transition process.
-     * 
-     * @param containerLayer
-     *            JComponent in which the application wishes to run the transition.
-     * @param transitionTarget
-     *            Implementation of <code>TransitionTarget</code> interface which will be called during transition
-     *            process.
-     */
-    private ScreenTransition(JComponent containerLayer, TransitionTarget transitionTarget) {
+    public static class Builder {
+        private static AtomicReference<EffectsManager> globalEffectsManager = new AtomicReference<>(new EffectsManager());
+
+        /**
+         * Sets the passed effects manager as the default used for the construction of transitions. If no effects
+         * manager is explicitly set, a default is used.
+         *
+         * Passing {@code null} to this method resets the effect manager to the default.
+         */
+        static void setDefaultEffectsManager(EffectsManager effectsManager) {
+            if (effectsManager == null) {
+                globalEffectsManager.set(new EffectsManager());
+            } else {
+                globalEffectsManager.set(effectsManager);
+            }
+        }
+
+        static EffectsManager getDefaultEffectsManager() {
+            return globalEffectsManager.get();
+        }
+
+        private final JComponent transitionComponent;
+        private final TransitionTarget transitionTarget;
+
+        private Animator animator = null;
+        private EffectsManager effectsManager;
+
+        public Builder(JComponent transitionComponent, TransitionTarget transitionTarget) {
+            this.transitionComponent = transitionComponent;
+            this.transitionTarget = transitionTarget;
+        }
+
+        /**
+         * The Animator used to drive this ScreenTransition will be created internally using the duration.
+         *
+         * @param durationInMillis
+         *            the length of time in milliseconds that the transition will last
+         */
+        public Builder setDuration(int durationInMillis) {
+            return setAnimator(new Animator.Builder().setDuration(durationInMillis, TimeUnit.MILLISECONDS).build());
+        }
+
+        /**
+         * Sets the Animator that will be used to drive the ScreenTransition. Transition will start if either
+         * {@link #start} is called or {@link Animator#start} is called.
+         *
+         * @throws IllegalStateException
+         *             if animator is already running
+         * @throws IllegalArgumentException
+         *             animator must be non-null
+         * @param animator
+         *            the animator that defines the characteristics of the transition animation, such as its duration
+         * @see Animator#isRunning()
+         * @see Animator#start()
+         */
+        public Builder setAnimator(Animator animator) {
+            if (animator == null) {
+                throw new IllegalArgumentException("Animator must be non-null");
+            }
+            if (animator.isRunning()) {
+                throw new IllegalStateException("Cannot perform this operation " + "while animator is running");
+            }
+            this.animator = animator;
+            return this;
+        }
+
+        /**
+         * Sets the effect manager to be used by this transition. The default effect manager is the global default.
+         * 
+         * @param effectsManager
+         *            the effect manager used for this transition
+         */
+        public Builder setEffectsManager(EffectsManager effectsManager) {
+            this.effectsManager = effectsManager;
+            return this;
+        }
+
+        /**
+         * Constructs a screen transition with the settings defined by this builder.
+         *
+         * @throws IllegalArgumentException
+         *             if no animator or duration was provided
+         * 
+         * @return a screen transition.
+         */
+        public ScreenTransition build() {
+            if (animator == null)
+                throw new IllegalArgumentException("Either an animator or a duration must be provided.");
+
+            EffectsManager customEffectManager = effectsManager == null ? globalEffectsManager.get() : effectsManager;
+            return new ScreenTransition(transitionComponent, transitionTarget, customEffectManager, animator);
+        }
+    }
+
+    private ScreenTransition(JComponent containerLayer,
+            TransitionTarget transitionTarget,
+            EffectsManager effectsManager,
+            Animator animator) {
         this.containerLayer = containerLayer;
         this.transitionTarget = transitionTarget;
 
-        animationManager = new AnimationManager(containerLayer);
+        animationManager = new AnimationManager(effectsManager, containerLayer);
         animationLayer = new AnimationLayer(this);
         animationLayer.setVisible(false);
         containerLayer.addComponentListener(new ContainerSizeListener());
         createTransitionImages();
-    }
-
-    /**
-     * ` Constructor that takes an Animator that will be used to drive the ScreenTransition. Transition will start if
-     * either {@link #start} is called or {@link Animator#start} is called.
-     * 
-     * @throws IllegalStateException
-     *             if animator is already running
-     * @throws IllegalArgumentException
-     *             animator must be non-null
-     * @param transitionComponent
-     *            JComponent in which the application wishes to run the transition.
-     * @param transitionTarget
-     *            Implementation of {@link TransitionTarget} interface which will be called during transition process.
-     * @param animator
-     *            the animator that defines the characteristics of the transition animation, such as its duration
-     * @see Animator#isRunning()
-     * @see Animator#start()
-     */
-    public ScreenTransition(JComponent transitionComponent, TransitionTarget transitionTarget, Animator animator) {
-        this(transitionComponent, transitionTarget);
         setAnimator(animator);
-    }
-
-    /**
-     * Constructor that takes a simple duration. The Animator used to drive this ScreenTransition will be created
-     * internally.
-     * 
-     * @param transitionComponent
-     *            JComponent in which the application wishes to run the transition.
-     * @param transitionTarget
-     *            Implementation of {@link TransitionTarget} interface which will be called during transition process.
-     * @param duration
-     *            the length of time in milliseconds that the transition will last
-     */
-    public ScreenTransition(JComponent transitionComponent, TransitionTarget transitionTarget, int duration) {
-        this(transitionComponent, transitionTarget);
-        setAnimator(new Animator.Builder().setDuration(duration, TimeUnit.MILLISECONDS)
-                                          .addTarget(transitionTimingTarget)
-                                          .build());
     }
 
     /**
@@ -202,13 +282,7 @@ public class ScreenTransition {
      *             animator must be non-null
      * @see Animator#isRunning()
      */
-    public void setAnimator(Animator animator) {
-        if (animator == null) {
-            throw new IllegalArgumentException("Animator must be non-null");
-        }
-        if (animator.isRunning()) {
-            throw new IllegalStateException("Cannot perform this operation " + "while animator is running");
-        }
+    private void setAnimator(Animator animator) {
         this.animator = animator;
         animator.addTarget(transitionTimingTarget);
     }

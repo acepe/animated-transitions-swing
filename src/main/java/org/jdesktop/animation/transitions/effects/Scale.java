@@ -1,3 +1,4 @@
+//@formatter:off
 /*
  * Copyright 2007 Sun Microsystems, Inc.  All Rights Reserved.
  *
@@ -28,15 +29,15 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+//@formatter:on
 
 package org.jdesktop.animation.transitions.effects;
 
+import org.jdesktop.animation.transitions.ComponentState;
+import org.jdesktop.animation.transitions.Effect;
 import org.jdesktop.core.animation.timing.Animator;
 import org.jdesktop.core.animation.timing.PropertySetter;
 import org.jdesktop.core.animation.timing.TimingTarget;
-import org.jdesktop.animation.transitions.ComponentState;
-import org.jdesktop.animation.transitions.Effect;
-
 
 /**
  * Effect that resizes a component during the transition.
@@ -44,53 +45,48 @@ import org.jdesktop.animation.transitions.Effect;
  * @author Chet Haase
  */
 public class Scale extends Effect {
-    
-    // Two property setters to animate both the width and height of 
+
+    // Two property setters to animate both the width and height of
     // the component. Note that the actual width/height properties are
     // in Effect itself; we are merely setting up an animation here to
     // vary those existing properties.
     private TimingTarget psWidth, psHeight;
-    
+
     public Scale() {
         // scaling effect, by default, will re-render Component every time
         setRenderComponent(true);
     }
-    
+
     /**
-     * Creates a new instance of Scale with start and end states for
-     * the component
+     * Creates a new instance of Scale with start and end states for the component
      */
     public Scale(ComponentState start, ComponentState end) {
         // Call default constructor to initialize important state
         this();
-	setComponentStates(start, end);
+        setComponentStates(start, end);
     }
-    
+
     /**
-     * Initializes the effect, adding animation
-     * targets that will scale the component of the effect from the start to
+     * Initializes the effect, adding animation targets that will scale the component of the effect from the start to
      * the end sizes during the course of the transition.
      */
     @Override
     public void init(Animator animator, Effect parentEffect) {
         Effect targetEffect = (parentEffect == null) ? this : parentEffect;
-        psWidth = PropertySetter.getTarget(targetEffect, "width", getStart().getWidth(), 
-                getEnd().getWidth());
+        psWidth = PropertySetter.getTarget(targetEffect, "width", getStart().getWidth(), getEnd().getWidth());
         animator.addTarget(psWidth);
-        psHeight = PropertySetter.getTarget(targetEffect, "height", getStart().getHeight(), 
-                getEnd().getHeight());
+        psHeight = PropertySetter.getTarget(targetEffect, "height", getStart().getHeight(), getEnd().getHeight());
         animator.addTarget(psHeight);
         super.init(animator, null);
     }
-    
+
     /**
-     * Removes the scaling targets from the animation to avoid
-     * leaking resources
+     * Removes the scaling targets from the animation to avoid leaking resources
      */
     @Override
     public void cleanup(Animator animator) {
         animator.removeTarget(psWidth);
         animator.removeTarget(psHeight);
     }
-    
+
 }

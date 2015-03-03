@@ -1,18 +1,35 @@
+//@formatter:off
 /*
- * Copyright 2007 Sun Microsystems, Inc. All Rights Reserved. Redistribution and use in source and binary forms, with or
- * without modification, are permitted provided that the following conditions are met: - Redistributions of source code
- * must retain the above copyright notice, this list of conditions and the following disclaimer. - Redistributions in
- * binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution. - Neither the name of Sun Microsystems nor the
- * names of its contributors may be used to endorse or promote products derived from this software without specific
- * prior written permission. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Copyright 2007 Sun Microsystems, Inc.  All Rights Reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   - Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *   - Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *
+ *   - Neither the name of Sun Microsystems nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+//@formatter:on
 
 package org.jdesktop.animation.transitions;
 
@@ -43,14 +60,16 @@ import org.jdesktop.core.animation.timing.Animator;
  */
 class AnimationManager {
 
+    private final EffectsManager effectsManager;
+
+    // The container in which the transition will occur
+    private final JComponent container;
+
     // The set of start/end states for each component in the transition
     private Map<JComponent, AnimationState> componentAnimationStates = new HashMap<>();
 
     // The set of components that change between their start and end states
     private ArrayList<JComponent> changingComponents = new ArrayList<>();
-
-    // The container in which the transition will occur
-    JComponent container = null;
 
     /**
      * Background that will be copied into the transitionImage on every frame. This represents the default (empty) state
@@ -59,7 +78,8 @@ class AnimationManager {
      */
     private BufferedImage transitionImageBG = null;
 
-    AnimationManager(JComponent container) {
+    AnimationManager(EffectsManager effectsManager, JComponent container) {
+        this.effectsManager = effectsManager;
         this.container = container;
         recreateImage();
     }
@@ -80,7 +100,7 @@ class AnimationManager {
     /**
      * Utility method, used to check whether the given component has a state set already.
      */
-    private AnimationState getExistingAnimationState(Component component) {
+    private AnimationState getExistingAnimationState(JComponent component) {
         return componentAnimationStates.get(component);
     }
 
@@ -107,7 +127,7 @@ class AnimationManager {
 
         // First, make sure that we don't run animations for components
         // that aren't even visible
-        List<Component> componentsToRemove = new ArrayList<>();
+        List<JComponent> componentsToRemove = new ArrayList<>();
         for (AnimationState state : componentAnimationStates.values()) {
             Rectangle bounds = null;
             if (state.hasStart()) {
@@ -128,7 +148,7 @@ class AnimationManager {
                 componentsToRemove.add(state.getComponent());
             }
         }
-        for (Component component : componentsToRemove) {
+        for (JComponent component : componentsToRemove) {
             componentAnimationStates.remove(component);
             changingComponents.remove(component);
         }
@@ -175,22 +195,23 @@ class AnimationManager {
      * rendered to the bg image.
      */
     void setupEnd() {
-        for (Component child : container.getComponents()) {
-            if (child.isVisible() && (child instanceof JComponent)) {
-                ComponentState end = new ComponentState((JComponent) child);
+        for (Component childComponent : container.getComponents()) {
+            if (childComponent.isVisible() && (childComponent instanceof JComponent)) {
+                JComponent child = (JComponent) childComponent;
+                ComponentState end = new ComponentState(child);
                 AnimationState animState = getExistingAnimationState(child);
                 if (animState != null) {
                     ComponentState start = animState.getStart();
                     if (start != null && start.equals(end)) {
-                        componentAnimationStates.remove(child);
+                        componentAnimationStates.remove(childComponent);
                     } else {
-                        changingComponents.add((JComponent) child);
+                        changingComponents.add(child);
                         animState.setEnd(end);
                     }
                 } else {
-                    changingComponents.add((JComponent) child);
-                    animState = new AnimationState(end, false);
-                    componentAnimationStates.put((JComponent) child, animState);
+                    changingComponents.add(child);
+                    animState = new AnimationState(effectsManager, end, false);
+                    componentAnimationStates.put(child, animState);
                 }
             }
         }
@@ -209,7 +230,7 @@ class AnimationManager {
             // structure
             existingAnimState.setStart(new ComponentState(component));
         } else {
-            AnimationState animState = new AnimationState(component, true);
+            AnimationState animState = new AnimationState(effectsManager, component, true);
             componentAnimationStates.put(component, animState);
         }
     }
@@ -227,7 +248,7 @@ class AnimationManager {
             // structure
             existingAnimState.setEnd(new ComponentState(component));
         } else {
-            AnimationState animState = new AnimationState(component, false);
+            AnimationState animState = new AnimationState(effectsManager, component, false);
             componentAnimationStates.put(component, animState);
         }
     }

@@ -1,3 +1,4 @@
+//@formatter:off
 /*
  * Copyright 2007 Sun Microsystems, Inc.  All Rights Reserved.
  *
@@ -28,6 +29,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+//@formatter:on
 
 package org.jdesktop.animation.transitions.effects;
 
@@ -35,15 +37,14 @@ import java.awt.Graphics2D;
 
 import javax.swing.JComponent;
 
+import org.jdesktop.animation.transitions.ComponentState;
+import org.jdesktop.animation.transitions.Effect;
 import org.jdesktop.core.animation.timing.Animator;
 import org.jdesktop.core.animation.timing.PropertySetter;
 import org.jdesktop.core.animation.timing.TimingTarget;
-import org.jdesktop.animation.transitions.ComponentState;
-import org.jdesktop.animation.transitions.Effect;
 
 /**
- * This Effect rotates a component through a given number of degrees
- * during the animated transition.
+ * This Effect rotates a component through a given number of degrees during the animated transition.
  * 
  * @author Chet Haase
  */
@@ -61,80 +62,77 @@ public class Rotate extends Effect {
     private TimingTarget ps;
 
     /**
-     * This property setting method is called during the transition by
-     * the animation target that this effect sets up. It varies the value
-     * of the effect's <code>radians</code> property, which is used to
-     * determine the angle at which to display the component.
+     * This property setting method is called during the transition by the animation target that this effect sets up. It
+     * varies the value of the effect's <code>radians</code> property, which is used to determine the angle at which to
+     * display the component.
      */
     public void setRadians(double radians) {
         this.radians = radians;
     }
 
     /**
-     * Constructs a Rotate effect with the number of 
-     * degrees to rotate through during the transition.  This 
-     * constructor will result in an effect that rotates around the center
-     * of the given component.
+     * Constructs a Rotate effect with the number of degrees to rotate through during the transition. This constructor
+     * will result in an effect that rotates around the center of the given component.
      * 
-     * @param degrees The number of degrees to rotate through during 
-     * the transition
-     * @param component Used to determine the center of rotation. The rotation
-     * effect will be created to rotate around the center of the component.
+     * @param degrees
+     *            The number of degrees to rotate through during the transition
+     * @param component
+     *            Used to determine the center of rotation. The rotation effect will be created to rotate around the
+     *            center of the component.
      */
     public Rotate(int degrees, JComponent component) {
         this(degrees, component.getWidth() / 2, component.getHeight() / 2);
     }
-    
+
     /**
-     * Constructs a Rotate effect with the number of 
-     * degrees to rotate through during the transition.  This 
-     * constructor will result in an effect that rotates around the
-     * point <code>(xCenter, yCenter)</code>.
+     * Constructs a Rotate effect with the number of degrees to rotate through during the transition. This constructor
+     * will result in an effect that rotates around the point <code>(xCenter, yCenter)</code>.
      * 
-     * @param degrees The number of degrees to rotate through during 
-     * the transition
-     * @param xCenter The x coordinate of the center of rotation
-     * @param yCenter The y coordinate of the center of rotation
+     * @param degrees
+     *            The number of degrees to rotate through during the transition
+     * @param xCenter
+     *            The x coordinate of the center of rotation
+     * @param yCenter
+     *            The y coordinate of the center of rotation
      */
     public Rotate(int degrees, int xCenter, int yCenter) {
         this.endRadians = Math.toRadians(degrees);
-	this.xCenter = xCenter;
-	this.yCenter = yCenter;
-    }
-    
-    /** 
-     * Constructs a Rotate effect for a given component with the number
-     * of degrees you wish to rotate through during the transition and the
-     * center of rotation to use.
-     * 
-     * @param start The start state of the component
-     * @param end The end state of the component
-     * @param degrees The number of degrees to rotate through during 
-     * the transition
-     * @param xCenter The x coordinate of the center of rotation
-     * @param yCenter The y coordinate of the center of rotation
-     */
-    public Rotate(ComponentState start, ComponentState end,
-                  int degrees, int xCenter, int yCenter)
-    {
-        this(degrees, xCenter, yCenter);
-	setComponentStates(start, end);
+        this.xCenter = xCenter;
+        this.yCenter = yCenter;
     }
 
     /**
-     * Initializes the effect, adding an animation
-     * target that will rotate the component of the effect from the start to
+     * Constructs a Rotate effect for a given component with the number of degrees you wish to rotate through during the
+     * transition and the center of rotation to use.
+     * 
+     * @param start
+     *            The start state of the component
+     * @param end
+     *            The end state of the component
+     * @param degrees
+     *            The number of degrees to rotate through during the transition
+     * @param xCenter
+     *            The x coordinate of the center of rotation
+     * @param yCenter
+     *            The y coordinate of the center of rotation
+     */
+    public Rotate(ComponentState start, ComponentState end, int degrees, int xCenter, int yCenter) {
+        this(degrees, xCenter, yCenter);
+        setComponentStates(start, end);
+    }
+
+    /**
+     * Initializes the effect, adding an animation target that will rotate the component of the effect from the start to
      * the end state during the course of the transition.
      */
     public void init(Animator animator, Effect parentEffect) {
         ps = PropertySetter.getTarget(this, "radians", 0.0, endRadians);
         animator.addTarget(ps);
         super.init(animator, null);
-    }        
-    
+    }
+
     /**
-     * Removes the rotation target from the animation to avoid
-     * leaking resources
+     * Removes the rotation target from the animation to avoid leaking resources
      */
     @Override
     public void cleanup(Animator animator) {
@@ -142,21 +140,19 @@ public class Rotate extends Effect {
     }
 
     /**
-     * Called during the painting process of each frame of the
-     * transition animation. This method alters the transform
-     * property of <code>g2d</code> to reflect the current
-     * animated rotation value.
+     * Called during the painting process of each frame of the transition animation. This method alters the transform
+     * property of <code>g2d</code> to reflect the current animated rotation value.
      * 
-     * @param g2d The graphics object that will have its transform
-     * property altered to rotate rendering according to the current
-     * rotation property of this effect.
+     * @param g2d
+     *            The graphics object that will have its transform property altered to rotate rendering according to the
+     *            current rotation property of this effect.
      */
     @Override
     public void setup(Graphics2D g2d) {
         // translate back and forth to rotate around the right point
-	g2d.translate(xCenter, yCenter);
-	g2d.rotate(radians);
-	g2d.translate(-xCenter, -yCenter);
-        super.setup(g2d);        
-    }    
+        g2d.translate(xCenter, yCenter);
+        g2d.rotate(radians);
+        g2d.translate(-xCenter, -yCenter);
+        super.setup(g2d);
+    }
 }

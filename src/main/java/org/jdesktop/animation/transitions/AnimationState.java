@@ -1,22 +1,38 @@
+//@formatter:off
 /*
- * Copyright 2007 Sun Microsystems, Inc. All Rights Reserved. Redistribution and use in source and binary forms, with or
- * without modification, are permitted provided that the following conditions are met: - Redistributions of source code
- * must retain the above copyright notice, this list of conditions and the following disclaimer. - Redistributions in
- * binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution. - Neither the name of Sun Microsystems nor the
- * names of its contributors may be used to endorse or promote products derived from this software without specific
- * prior written permission. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Copyright 2007 Sun Microsystems, Inc.  All Rights Reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   - Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *   - Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *
+ *   - Neither the name of Sun Microsystems nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+//@formatter:on
 
 package org.jdesktop.animation.transitions;
 
-import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
@@ -40,6 +56,7 @@ import org.jdesktop.core.animation.timing.Animator;
  */
 class AnimationState {
 
+    private final EffectsManager effectsManager;
     /**
      * The component for this AnimationState. There is one component per state, with either a start, an end, or both
      * states.
@@ -60,7 +77,8 @@ class AnimationState {
     /**
      * Creates the AnimationState with the given start/end ComponentState
      */
-    AnimationState(ComponentState state, boolean isStart) {
+    AnimationState(EffectsManager effectsManager, ComponentState state, boolean isStart) {
+        this.effectsManager = effectsManager;
         component = state.getComponent();
         if (isStart) {
             start = state;
@@ -72,7 +90,8 @@ class AnimationState {
     /**
      * Constructs a new AnimationState with either the start or end state for the component.
      */
-    AnimationState(JComponent component, boolean isStart) {
+    AnimationState(EffectsManager effectsManager, JComponent component, boolean isStart) {
+        this.effectsManager = effectsManager;
         this.component = component;
         ComponentState compState = new ComponentState(component);
         if (isStart) {
@@ -98,7 +117,7 @@ class AnimationState {
         return end;
     }
 
-    Component getComponent() {
+    JComponent getComponent() {
         return component;
     }
 
@@ -120,7 +139,7 @@ class AnimationState {
         if (start == null) {
             // component is appearing during transition; search for existing
             // custom effects for this transition type
-            effect = EffectsManager.getEffect(component, EffectsManager.TransitionType.APPEARING);
+            effect = effectsManager.getEffect(component, EffectsManager.TransitionType.APPEARING);
             if (effect == null) {
                 effect = new FadeIn(end);
             } else {
@@ -129,7 +148,7 @@ class AnimationState {
         } else if (end == null) {
             // component is disappearing during transition; search for existing
             // custom effects for this transition type
-            effect = EffectsManager.getEffect(component, EffectsManager.TransitionType.DISAPPEARING);
+            effect = effectsManager.getEffect(component, EffectsManager.TransitionType.DISAPPEARING);
             if (effect == null) {
                 effect = new FadeOut(start);
             } else {
@@ -138,7 +157,7 @@ class AnimationState {
         } else {
             // component is in both screens; search for existing
             // custom effects for this transition type
-            effect = EffectsManager.getEffect(component, EffectsManager.TransitionType.CHANGING);
+            effect = effectsManager.getEffect(component, EffectsManager.TransitionType.CHANGING);
             if (effect == null) {
                 // No custom effect exists; use move/scale combinations
                 // as appropriate
